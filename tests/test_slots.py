@@ -77,9 +77,7 @@ class TestGetVisibleDays:
         """No vacation data returns empty list."""
         assert get_visible_days({}, default_limits, date(2026, 3, 10)) == []
 
-    def test_includes_future_months(
-        self, default_limits: dict[int, int]
-    ) -> None:
+    def test_includes_future_months(self, default_limits: dict[int, int]) -> None:
         """Days from future months with data are included."""
         # Arrange
         day_counts = {
@@ -115,9 +113,7 @@ class TestGetVisibleDays:
 class TestGroupByMonth:
     """Tests for group_by_month function."""
 
-    def test_groups_days_into_months(
-        self, default_limits: dict[int, int]
-    ) -> None:
+    def test_groups_days_into_months(self, default_limits: dict[int, int]) -> None:
         """Days spanning two months produce two MonthData objects."""
         # Arrange
         day_counts = {
@@ -135,9 +131,7 @@ class TestGroupByMonth:
         assert months[0].year == 2026
         assert months[1].month == 4
 
-    def test_single_month_data(
-        self, default_limits: dict[int, int]
-    ) -> None:
+    def test_single_month_data(self, default_limits: dict[int, int]) -> None:
         """Single month of data produces one MonthData."""
         # Arrange
         day_counts = {date(2026, 3, 15): 1}

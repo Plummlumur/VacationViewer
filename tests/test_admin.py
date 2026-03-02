@@ -6,7 +6,7 @@ from pathlib import Path
 
 from django.test import RequestFactory
 
-from screen.admin_views import admin_login, admin_dashboard, _check_credentials
+from screen.admin_views import admin_login, _check_credentials
 from screen.config_manager import AppConfig, load_config, save_config
 
 
@@ -71,7 +71,9 @@ class TestAdminLogin:
         """POST with correct credentials redirects to dashboard."""
         from django.contrib.sessions.backends.db import SessionStore
 
-        request = rf.post("/admin/login/", {"username": "testadmin", "password": "testpass"})
+        request = rf.post(
+            "/admin/login/", {"username": "testadmin", "password": "testpass"}
+        )
         request.session = SessionStore()
         response = admin_login(request)
         assert response.status_code == 302

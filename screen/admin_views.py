@@ -4,7 +4,6 @@ Provides login and dashboard views to edit runtime configuration.
 Credentials are stored in config/admin.json.
 """
 
-import hashlib
 import json
 import logging
 from functools import wraps
@@ -171,7 +170,11 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
         "config": config,
         "weekday_labels": WEEKDAY_LABELS,
         "weekday_limits": [
-            {"index": i, "label": WEEKDAY_LABELS[i], "limit": config.vacation_limits.get(i, 5)}
+            {
+                "index": i,
+                "label": WEEKDAY_LABELS[i],
+                "limit": config.vacation_limits.get(i, 5),
+            }
             for i in range(7)
         ],
         "success": success,

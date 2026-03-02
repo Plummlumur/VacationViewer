@@ -128,9 +128,7 @@ def load_xlsx(path: Path) -> list[VacationRange]:
         except ValueError as e:
             logger.warning("Row %d: %s", row_num, e)
 
-    logger.info(
-        "Loaded %d vacation ranges from %d data rows", len(ranges), row_num - 1
-    )
+    logger.info("Loaded %d vacation ranges from %d data rows", len(ranges), row_num - 1)
     wb.close()
     return ranges
 

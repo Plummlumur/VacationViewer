@@ -10,7 +10,9 @@ from pathlib import Path
 BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
 # Security: Load from env in production
-SECRET_KEY: str = os.environ.get("SECRET_KEY", "django-insecure-vacationviewer-dev-key-change-in-production")
+SECRET_KEY: str = os.environ.get(
+    "SECRET_KEY", "django-insecure-vacationviewer-dev-key-change-in-production"
+)
 DEBUG: bool = os.environ.get("DEBUG", "True").lower() == "true"
 ALLOWED_HOSTS: list[str] = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 

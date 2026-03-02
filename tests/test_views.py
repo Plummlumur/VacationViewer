@@ -4,7 +4,6 @@ import json
 import pytest
 from pathlib import Path
 from unittest.mock import patch
-from datetime import date
 
 from django.test import RequestFactory
 
@@ -37,9 +36,7 @@ class TestMonthScreenView:
     """Tests for the month screen view."""
 
     @pytest.mark.django_db
-    def test_renders_with_data(
-        self, rf: RequestFactory, sample_xlsx: Path
-    ) -> None:
+    def test_renders_with_data(self, rf: RequestFactory, sample_xlsx: Path) -> None:
         """Month screen renders successfully with test data."""
         # Arrange
         request = rf.get("/")
@@ -49,9 +46,7 @@ class TestMonthScreenView:
             mock_config.return_value.xlsx_path = str(sample_xlsx)
             mock_config.return_value.refresh_minutes = 5
             mock_config.return_value.rotation_seconds = 10
-            mock_config.return_value.vacation_limits = {
-                i: 5 for i in range(7)
-            }
+            mock_config.return_value.vacation_limits = {i: 5 for i in range(7)}
             response = month_screen(request)
 
         # Assert
@@ -71,9 +66,7 @@ class TestMonthScreenView:
             mock_config.return_value.xlsx_path = "/nonexistent/file.xlsx"
             mock_config.return_value.refresh_minutes = 5
             mock_config.return_value.rotation_seconds = 10
-            mock_config.return_value.vacation_limits = {
-                i: 5 for i in range(7)
-            }
+            mock_config.return_value.vacation_limits = {i: 5 for i in range(7)}
             response = month_screen(request)
 
         # Assert

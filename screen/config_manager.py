@@ -57,8 +57,7 @@ def load_config() -> AppConfig:
             if "vacation_limits" in overrides:
                 # JSON keys are strings, convert to int
                 config.vacation_limits = {
-                    int(k): int(v)
-                    for k, v in overrides["vacation_limits"].items()
+                    int(k): int(v) for k, v in overrides["vacation_limits"].items()
                 }
             if "xlsx_path" in overrides:
                 config.xlsx_path = str(overrides["xlsx_path"])
@@ -87,9 +86,7 @@ def save_config(config: AppConfig) -> None:
 
     # Convert int keys to strings for JSON serialization
     data: dict = asdict(config)
-    data["vacation_limits"] = {
-        str(k): v for k, v in config.vacation_limits.items()
-    }
+    data["vacation_limits"] = {str(k): v for k, v in config.vacation_limits.items()}
 
     with open(override_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
