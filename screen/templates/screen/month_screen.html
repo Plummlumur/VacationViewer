@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Urlaubsübersicht – Freie Slots für das Team">
+    <title>Urlaubsübersicht</title>
+    <link rel="stylesheet" href="{% static 'screen/css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body data-config='{{ config_json|escapejs }}'>
+
+    <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+
+    {% if error %}
+    <div class="error-banner" role="alert">
+        <span class="error-icon" aria-hidden="true">⚠</span>
+        <span>Fehler beim Laden der Daten: {{ error }}</span>
+    </div>
+    {% endif %}
+
+    <main id="main-content">
+
+        <div id="rotation-announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+        <button type="button" id="rotation-toggle" class="rotation-toggle" aria-pressed="false"
+            aria-label="Automatische Rotation pausieren">
+            <span class="rotation-toggle__icon" aria-hidden="true">⏸</span>
+        </button>
+
+        <div class="screen-container" id="screen-container">
+            {% for month in months %}
+            <section class="month-page {% if forloop.first %}month-page--active{% endif %}"
+                data-month-index="{{ forloop.counter0 }}" data-month-label="{{ month.label }}"
+                aria-label="Urlaubsübersicht {{ month.label }}">
+
+                <header class="month-header">
+                    <h1 class="month-title">Urlaubsplan für {{ month.label }}</h1>
+                    <div class="month-meta">
+                        <span class="page-indicator">{{ forloop.counter }} / {{ months|length }}</span>
+                    </div>
+                </header>
+
+                <div class="calendar-grid" role="grid" aria-label="Kalender {{ month.label }}">
+                    <div class="calendar-header" role="row">
+                        {% for name in weekday_names %}
+                        <div class="calendar-header-cell" role="columnheader">{{ name }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="calendar-body" role="rowgroup">
+                        {% with first_day=month.days.0 %}
+                        {% if first_day %}
+                        {% for _ in weekday_names %}
+                        {% if forloop.counter0 < first_day.weekday %} <div class="calendar-cell calendar-cell--empty"
+                            role="gridcell">
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    {% for day in month.days %}
+                    <div class="calendar-cell day--{{ day.status.value }}{% if day.day == today %} day--today{% endif %}"
+                        role="gridcell"
+                        aria-label="{{ day.day|date:'j. F' }}: {{ day.free_slots }} frei von {{ day.limit }}{% if day.day < today %}, vergangen{% endif %}">
+                        <span class="day-number">{{ day.day.day }}</span>
+                        {% if day.day < today %} <span class="day-indicator day-indicator--past" aria-hidden="true">
+                            —</span>
+                            <span class="day-label">vergangen</span>
+                            {% else %}
+                            <span class="day-indicator" aria-hidden="true">{% if day.status.value == "free" %}✓{% elif day.status.value == "limit_reached" %}✗{% else %}●{% endif %}</span>
+                            <span class="day-slots">{{ day.vacation_count }}/{{ day.limit }}</span>
+                            <span class="day-label">{% if day.status.value == "limit_reached" %}belegt{% else %}{{ day.free_slots }} frei{% endif %}</span>
+                            {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+        </div>
+
+        <footer class="legend" aria-label="Legende">
+            <div class="legend-item">
+                <span class="legend-swatch legend-swatch--free" aria-hidden="true"></span>
+                <span class="legend-icon" aria-hidden="true">✓</span>
+                <span>Frei</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-swatch legend-swatch--occupied" aria-hidden="true"></span>
+                <span class="legend-icon" aria-hidden="true">●</span>
+                <span>Belegt</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-swatch legend-swatch--limit" aria-hidden="true"></span>
+                <span class="legend-icon" aria-hidden="true">✗</span>
+                <span>Limit erreicht</span>
+            </div>
+        </footer>
+        </section>
+        {% empty %}
+        <div class="empty-state">
+            <p>Keine Urlaubsdaten verfügbar.</p>
+        </div>
+        {% endfor %}
+        </div>
+
+    </main>
+
+    <script src="{% static 'screen/js/rotation.js' %}"></script>
+</body>
+
+</html>

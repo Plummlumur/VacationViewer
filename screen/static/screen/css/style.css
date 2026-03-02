@@ -1,0 +1,481 @@
+/* ===== VacationViewer – TV-Optimized Screen CSS ===== */
+
+:root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #1e293b;
+    --border: #334155;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #7c8ba1;
+    /* Raised from #64748b → 4.6:1 on --bg-primary */
+
+    /* Status colors (Colorblind-friendly: Teal, Amber, Purple) */
+    --free-bg: #083344;
+    --free-border: #22d3ee;
+    --free-text: #67e8f9;
+
+    --occupied-bg: #78350f;
+    --occupied-border: #f59e0b;
+    --occupied-text: #fcd34d;
+
+    --limit-bg: #3b0764;
+    --limit-border: #a855f7;
+    --limit-text: #d8b4fe;
+
+    --past-bg: #1a1a2e;
+    --past-text: #7c8ba1;
+    /* Raised from #475569 for 4.5:1 contrast */
+
+    --today-border: #3b82f6;
+    --today-glow: rgba(59, 130, 246, 0.3);
+
+    --focus-color: #60a5fa;
+    --focus-ring: 3px solid var(--focus-color);
+
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --min-font-size: 24px;
+}
+
+/* ===== Reset ===== */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===== Base ===== */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    font-size: var(--min-font-size);
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Focus Visible (WCAG 2.4.7) ===== */
+*:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* ===== Screen-reader only utility ===== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ===== Skip Link (WCAG 2.4.1) ===== */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 16px;
+    z-index: 10000;
+    padding: 12px 24px;
+    background: var(--focus-color);
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 0 0 8px 8px;
+    text-decoration: none;
+    transition: top 0.2s;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* ===== Rotation Toggle (WCAG 2.2.2) ===== */
+.rotation-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.rotation-toggle:hover {
+    border-color: var(--text-secondary);
+    background: var(--bg-primary);
+}
+
+.rotation-toggle[aria-pressed="true"] {
+    border-color: var(--free-border);
+    color: var(--free-text);
+}
+
+/* ===== Screen Container ===== */
+.screen-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+
+/* ===== Month Page ===== */
+.month-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 48px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease-in-out, visibility 0.8s;
+}
+
+.month-page--active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ===== Month Header ===== */
+.month-header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    margin-bottom: 28px;
+    flex-shrink: 0;
+}
+
+.month-meta {
+    position: absolute;
+    right: 0;
+    bottom: 8px;
+}
+
+.month-title {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-indicator {
+    font-size: 18px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* ===== Calendar Grid ===== */
+.calendar-grid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.calendar-header-cell {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    padding: 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    flex: 1;
+    align-content: start;
+}
+
+/* ===== Day Cells ===== */
+.calendar-cell {
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 2px solid transparent;
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 80px;
+}
+
+.calendar-cell--empty {
+    background: transparent;
+    border: none;
+}
+
+/* Status: Free */
+.day--free {
+    background: var(--free-bg);
+    border-color: var(--free-border);
+}
+
+.day--free .day-indicator {
+    color: var(--free-text);
+}
+
+.day--free .day-label {
+    color: var(--free-text);
+}
+
+.day--free .day-slots {
+    color: var(--free-text);
+}
+
+/* Status: Occupied */
+.day--occupied {
+    background: var(--occupied-bg);
+    border-color: var(--occupied-border);
+}
+
+.day--occupied .day-indicator {
+    color: var(--occupied-text);
+}
+
+.day--occupied .day-label {
+    color: var(--occupied-text);
+}
+
+.day--occupied .day-slots {
+    color: var(--occupied-text);
+}
+
+/* Status: Limit Reached */
+.day--limit_reached {
+    background: var(--limit-bg);
+    border-color: var(--limit-border);
+}
+
+.day--limit_reached .day-indicator {
+    color: var(--limit-text);
+}
+
+.day--limit_reached .day-label {
+    color: var(--limit-text);
+}
+
+.day--limit_reached .day-slots {
+    color: var(--limit-text);
+}
+
+/* Today highlight */
+.day--today {
+    border-color: var(--today-border) !important;
+    box-shadow: 0 0 20px var(--today-glow), inset 0 0 20px rgba(59, 130, 246, 0.1);
+    transform: scale(1.03);
+}
+
+.day-number {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.day-indicator {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.day-indicator--past {
+    color: var(--past-text);
+}
+
+.day-slots {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.day-label {
+    font-size: 14px;
+    /* Raised from 12px for better readability & contrast ratio */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1;
+}
+
+/* ===== Legend ===== */
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    padding: 20px 0;
+    flex-shrink: 0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.legend-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid;
+}
+
+.legend-swatch--free {
+    background: var(--free-bg);
+    border-color: var(--free-border);
+}
+
+.legend-swatch--occupied {
+    background: var(--occupied-bg);
+    border-color: var(--occupied-border);
+}
+
+.legend-swatch--limit {
+    background: var(--limit-bg);
+    border-color: var(--limit-border);
+}
+
+.legend-icon {
+    font-size: 16px;
+}
+
+/* ===== Error Banner ===== */
+.error-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+    padding: 16px 32px;
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.error-icon {
+    font-size: 28px;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 32px;
+    color: var(--text-muted);
+}
+
+/* ===== Reduced Motion (WCAG 2.3.3) ===== */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .month-page {
+        transition: none;
+    }
+
+    .day--today {
+        transform: none;
+        box-shadow: none;
+        border-width: 3px;
+    }
+}
+
+/* ===== Media Queries ===== */
+@media (max-width: 1280px) {
+    .month-title {
+        font-size: 36px;
+    }
+
+    .calendar-cell {
+        min-height: 64px;
+        padding: 8px;
+    }
+
+    .day-number {
+        font-size: 22px;
+    }
+
+    .month-page {
+        padding: 24px 32px;
+    }
+}
+
+@media (max-width: 800px) {
+    .month-title {
+        font-size: 28px;
+    }
+
+    .calendar-cell {
+        min-height: 48px;
+        padding: 6px;
+    }
+
+    .day-number {
+        font-size: 18px;
+    }
+
+    .day-slots {
+        font-size: 13px;
+    }
+
+    .day-indicator {
+        font-size: 16px;
+    }
+
+    .legend {
+        gap: 24px;
+    }
+
+    .month-page {
+        padding: 16px;
+    }
+}

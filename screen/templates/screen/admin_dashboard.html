@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VacationViewer – Admin-Dashboard zur Konfiguration">
+    <title>Admin – Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .dashboard {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        /* Focus-visible ring (WCAG 2.4.7) */
+        *:focus-visible {
+            outline: 3px solid #60a5fa;
+            outline-offset: 2px;
+        }
+
+        .btn-logout {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .btn-logout:hover {
+            border-color: #94a3b8;
+            color: #e2e8f0;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-row label {
+            width: 140px;
+            flex-shrink: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .form-row input {
+            flex: 1;
+            padding: 10px 14px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #f8fafc;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+
+        .form-row input:focus-visible {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-row .unit {
+            font-size: 13px;
+            color: #7c8ba1;
+            width: 70px;
+            flex-shrink: 0;
+        }
+
+        .btn-save {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: transform 0.1s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-save:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #6ee7b7;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .btn-screen {
+            display: inline-block;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            transition: border-color 0.2s, color 0.2s;
+            margin-top: 16px;
+        }
+
+        .btn-screen:hover {
+            border-color: #94a3b8;
+            color: #e2e8f0;
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="dashboard">
+            <header class="dashboard-header">
+                <h1><span aria-hidden="true">&#x2699;</span> Konfiguration</h1>
+                <nav aria-label="Admin-Navigation">
+                    <a href="/admin/logout/" class="btn-logout">Abmelden</a>
+                </nav>
+            </header>
+
+            {% if success %}
+            <div class="success-message" role="status" id="save-success" tabindex="-1">
+                <span aria-hidden="true">&#x2705;</span> Konfiguration erfolgreich gespeichert. Änderungen sind sofort
+                wirksam.
+            </div>
+            {% endif %}
+
+            <form method="post" action="/admin/dashboard/" aria-label="Konfigurationsformular">
+                {% csrf_token %}
+
+                <fieldset class="card">
+                    <legend>
+                        <h2>Urlaubslimits pro Wochentag</h2>
+                    </legend>
+                    {% for item in weekday_limits %}
+                    <div class="form-row">
+                        <label for="limit_{{ item.index }}">{{ item.label }}</label>
+                        <input type="number" id="limit_{{ item.index }}" name="limit_{{ item.index }}"
+                            value="{{ item.limit }}" min="0" max="40" aria-describedby="unit_limit_{{ item.index }}">
+                        <span class="unit" id="unit_limit_{{ item.index }}">max. Pers.</span>
+                    </div>
+                    {% endfor %}
+                </fieldset>
+
+                <fieldset class="card">
+                    <legend>
+                        <h2>Allgemeine Einstellungen</h2>
+                    </legend>
+                    <div class="form-row">
+                        <label for="xlsx_path">Excel-Datei</label>
+                        <input type="text" id="xlsx_path" name="xlsx_path" value="{{ config.xlsx_path }}">
+                    </div>
+                    <div class="form-row">
+                        <label for="rotation_seconds">Rotation</label>
+                        <input type="number" id="rotation_seconds" name="rotation_seconds"
+                            value="{{ config.rotation_seconds }}" min="1" max="300" aria-describedby="unit_rotation">
+                        <span class="unit" id="unit_rotation">Sekunden</span>
+                    </div>
+                    <div class="form-row">
+                        <label for="refresh_minutes">Refresh</label>
+                        <input type="number" id="refresh_minutes" name="refresh_minutes"
+                            value="{{ config.refresh_minutes }}" min="1" max="60" aria-describedby="unit_refresh">
+                        <span class="unit" id="unit_refresh">Minuten</span>
+                    </div>
+                </fieldset>
+
+                <button type="submit" class="btn-save">
+                    <span aria-hidden="true">&#x1F4BE;</span> Speichern
+                </button>
+            </form>
+
+            <nav aria-label="Seitennavigation">
+                <a href="/" class="btn-screen">&larr; Zur Urlaubsübersicht</a>
+            </nav>
+        </div>
+    </main>
+
+    {% if success %}
+    <script>
+        // Focus management: move focus to success message after save (WCAG)
+        document.addEventListener("DOMContentLoaded", function () {
+            var el = document.getElementById("save-success");
+            if (el) { el.focus(); }
+        });
+    </script>
+    {% endif %}
+</body>
+
+</html>
