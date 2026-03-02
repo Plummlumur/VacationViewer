@@ -241,6 +241,18 @@ body {
     border: none;
 }
 
+/* Weekend Darkening */
+.calendar-header-cell:nth-child(7n-1),
+.calendar-header-cell:nth-child(7n) {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.calendar-body>.calendar-cell:nth-child(7n-1):not(.calendar-cell--empty),
+.calendar-body>.calendar-cell:nth-child(7n):not(.calendar-cell--empty) {
+    box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.35);
+}
+
 /* Status: Free */
 .day--free {
     background: var(--free-bg);
