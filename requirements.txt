@@ -1,6 +1,8 @@
+# VacationViewer – Production dependencies only
+# Install dev dependencies via: pip install -r requirements-dev.txt
+
 django>=5.1,<6.0
 openpyxl>=3.1,<4.0
 defusedxml>=0.7.1
-pytest>=8.0
-pytest-django>=4.8
-ruff>=0.9
+gunicorn>=21.0,<24.0
+whitenoise>=6.6,<7.0
