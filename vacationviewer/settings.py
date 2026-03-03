@@ -9,11 +9,15 @@ from pathlib import Path
 
 BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
-# Security: Load from env in production
+from django.core.management.utils import get_random_secret_key
+
+# Security: Load from env in production, otherwise generate a random one
+# Note: Generating a random key per startup invalidates sessions on restart, 
+# which is acceptable for this use case (a lightweight Kiosk application).
 SECRET_KEY: str = os.environ.get(
-    "SECRET_KEY", "django-insecure-vacationviewer-dev-key-change-in-production"
+    "SECRET_KEY", get_random_secret_key()
 )
-DEBUG: bool = os.environ.get("DEBUG", "True").lower() == "true"
+DEBUG: bool = os.environ.get("DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS: list[str] = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 
 INSTALLED_APPS: list[str] = [

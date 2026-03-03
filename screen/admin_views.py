@@ -74,7 +74,8 @@ def _check_credentials(username: str, password: str) -> bool:
     if stored_password.startswith("pbkdf2_"):
         return check_password(password, stored_password)
         
-    return stored_password == password
+    logger.warning("Stored password is not a valid hash.")
+    return False
 
 
 def login_required(
