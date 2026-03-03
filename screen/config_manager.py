@@ -26,6 +26,7 @@ class AppConfig:
     """
 
     vacation_limits: dict[int, int] = field(default_factory=dict)
+    day_exceptions: dict[str, int] = field(default_factory=dict)
     xlsx_path: str = ""
     rotation_seconds: int = 10
     refresh_minutes: int = 5
@@ -59,6 +60,10 @@ def load_config() -> AppConfig:
                 config.vacation_limits = {
                     int(k): int(v) for k, v in overrides["vacation_limits"].items()
                 }
+            if "day_exceptions" in overrides:
+                config.day_exceptions = {
+                    str(k): int(v) for k, v in overrides["day_exceptions"].items()
+                }
             if "xlsx_path" in overrides:
                 config.xlsx_path = str(overrides["xlsx_path"])
             if "rotation_seconds" in overrides:
@@ -87,6 +92,8 @@ def save_config(config: AppConfig) -> None:
     # Convert int keys to strings for JSON serialization
     data: dict = asdict(config)
     data["vacation_limits"] = {str(k): v for k, v in config.vacation_limits.items()}
+    # day_exceptions keys are already strings, but ensuring serialization safety
+    data["day_exceptions"] = {str(k): int(v) for k, v in config.day_exceptions.items()}
 
     with open(override_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)

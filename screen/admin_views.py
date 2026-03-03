@@ -155,26 +155,40 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
 
     if request.method == "POST":
         try:
-            # Parse weekday limits from form
+            def safe_int(val: str | None, default: int) -> int:
+                if not val:
+                    return default
+                val = val.strip()
+                return int(val) if val.isdigit() else default
+
             new_limits: dict[int, int] = {}
             for i in range(7):
-                val: str = request.POST.get(f"limit_{i}", "5")
-                new_limits[i] = max(0, int(val))
-
+                new_limits[i] = max(0, safe_int(request.POST.get(f"limit_{i}"), 5))
+            
+            exception_dates = request.POST.getlist("exception_dates[]")
+            exception_limits = request.POST.getlist("exception_limits[]")
+            
+            new_exceptions: dict[str, int] = {}
+            for edate, elimit in zip(exception_dates, exception_limits):
+                edate = edate.strip()
+                if edate and elimit.strip().isdigit():
+                    new_exceptions[edate] = max(0, int(elimit.strip()))
+            
             config.vacation_limits = new_limits
+            config.day_exceptions = new_exceptions
             config.xlsx_path = request.POST.get("xlsx_path", config.xlsx_path)
             config.rotation_seconds = max(
-                1, int(request.POST.get("rotation_seconds", "10"))
+                1, safe_int(request.POST.get("rotation_seconds"), 10)
             )
             config.refresh_minutes = max(
-                1, int(request.POST.get("refresh_minutes", "5"))
+                1, safe_int(request.POST.get("refresh_minutes"), 5)
             )
 
             save_config(config)
             invalidate_cache()
             success = True
             logger.info("Admin updated configuration")
-        except (ValueError, TypeError) as e:
+        except Exception as e:
             logger.error("Invalid config input: %s", e)
 
     context: dict = {
@@ -188,6 +202,7 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
             }
             for i in range(7)
         ],
+        "day_exceptions": config.day_exceptions.items(),
         "success": success,
     }
 

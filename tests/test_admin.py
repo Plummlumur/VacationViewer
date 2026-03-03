@@ -108,6 +108,7 @@ class TestConfigManager:
         # Arrange
         config = AppConfig(
             vacation_limits={0: 3, 1: 3, 2: 4, 3: 4, 4: 5, 5: 1, 6: 1},
+            day_exceptions={"2026-03-11": 11},
             xlsx_path="/data/test.xlsx",
             rotation_seconds=15,
             refresh_minutes=3,
@@ -119,5 +120,47 @@ class TestConfigManager:
 
         # Assert
         assert loaded.vacation_limits == config.vacation_limits
+        assert loaded.day_exceptions == config.day_exceptions
         assert loaded.rotation_seconds == 15
         assert loaded.refresh_minutes == 3
+
+class TestAdminDashboard:
+    """Tests for the admin dashboard view."""
+
+    @pytest.mark.django_db
+    def test_post_saves_day_exceptions(
+        self, rf: RequestFactory, config_override_path: Path
+    ) -> None:
+        """POST request to dashboard correctly parses and saves day_exceptions arrays."""
+        from django.contrib.sessions.backends.db import SessionStore
+        from screen.admin_views import admin_dashboard
+
+        # Arrange: Send POST data mimicking the HTML form
+        post_data = {
+            "limit_0": "5", "limit_1": "5", "limit_2": "5", "limit_3": "5",
+            "limit_4": "5", "limit_5": "2", "limit_6": "2",
+            "xlsx_path": "data/urlaub.xlsx",
+            "rotation_seconds": "10",
+            "refresh_minutes": "5",
+        }
+        
+        request = rf.post("/admin/dashboard/", post_data)
+        # Using QueryDict.setlist to mimic multiple inputs with same name
+        request.POST._mutable = True
+        request.POST.setlist("exception_dates[]", ["2026-03-11", "2026-04-01"])
+        request.POST.setlist("exception_limits[]", ["11", "20"])
+        request.POST._mutable = False
+        
+        request.session = SessionStore()
+        request.session["admin_authenticated"] = True
+
+        # Act
+        response = admin_dashboard(request)
+
+        # Assert
+        assert response.status_code == 200
+        loaded = load_config()
+        assert "2026-03-11" in loaded.day_exceptions
+        assert loaded.day_exceptions["2026-03-11"] == 11
+        assert "2026-04-01" in loaded.day_exceptions
+        assert loaded.day_exceptions["2026-04-01"] == 20

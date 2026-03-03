@@ -71,6 +71,22 @@ class TestGetVisibleDays:
         assert monday.limit == 5
         assert monday.status == DayStatus.OCCUPIED
 
+    def test_uses_day_exceptions(self, default_limits: dict[int, int]) -> None:
+        """Day exceptions override the default weekday limits."""
+        # Arrange
+        day_exceptions = {"2026-03-12": 10}
+        day_counts = {date(2026, 3, 12): 8}
+        today = date(2026, 3, 1)
+
+        # Act
+        days = get_visible_days(day_counts, default_limits, today, day_exceptions)
+
+        # Assert
+        exception_day = next(d for d in days if d.day == date(2026, 3, 12))
+        assert exception_day.limit == 10
+        assert exception_day.status == DayStatus.OCCUPIED
+        assert exception_day.free_slots == 2
+
     def test_empty_data_returns_empty_list(
         self, default_limits: dict[int, int]
     ) -> None:

@@ -44,7 +44,12 @@ def month_screen(request: HttpRequest) -> HttpResponse:
         )
 
     today: date = date.today()
-    days = get_visible_days(day_counts, config.vacation_limits, today)
+    days = get_visible_days(
+        day_counts,
+        config.vacation_limits,
+        today,
+        config.day_exceptions,
+    )
     months = group_by_month(days)
 
     # Prepare weekday headers
