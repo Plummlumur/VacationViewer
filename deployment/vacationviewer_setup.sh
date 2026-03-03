@@ -32,6 +32,7 @@ if [ -f "requirements.txt" ]; then
 else
     echo "Warning: requirements.txt not found. Continuing without package installation."
 fi
+pip install waitress
 
 echo "[4/6] Running Django migrations..."
 python manage.py makemigrations
@@ -48,7 +49,7 @@ After=network.target
 User=$USER
 Group=www-data
 WorkingDirectory=$APP_DIR
-ExecStart=$VENV_DIR/bin/python manage.py runserver 0.0.0.0:8000
+ExecStart=$VENV_DIR/bin/waitress-serve --port=8000 vacationviewer.wsgi:application
 Restart=always
 
 [Install]
