@@ -36,12 +36,12 @@
                 <option value="{{ forloop.counter0 }}">{{ month.label }}</option>
                 {% endfor %}
             </select>
+            <button type="button" id="rotation-next" class="rotation-btn" aria-label="Nächster Monat">
+                <span aria-hidden="true">&raquo;</span>
+            </button>
             <button type="button" id="rotation-toggle" class="rotation-btn" aria-pressed="false"
                 aria-label="Automatische Rotation pausieren">
                 <span class="rotation-btn__icon" aria-hidden="true">⏸</span>
-            </button>
-            <button type="button" id="rotation-next" class="rotation-btn" aria-label="Nächster Monat">
-                <span aria-hidden="true">&raquo;</span>
             </button>
         </div>
 
