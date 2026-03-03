@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Urlaubsübersicht – Freie Slots für das Team">
     <title>Urlaubsübersicht</title>
-    <link rel="stylesheet" href="{% static 'screen/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'screen/css/style.css' %}?v=1.1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 </head>
@@ -27,10 +27,18 @@
 
         <div id="rotation-announce" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-        <button type="button" id="rotation-toggle" class="rotation-toggle" aria-pressed="false"
-            aria-label="Automatische Rotation pausieren">
-            <span class="rotation-toggle__icon" aria-hidden="true">⏸</span>
-        </button>
+        <div class="rotation-controls">
+            <button type="button" id="rotation-prev" class="rotation-btn" aria-label="Vorheriger Monat">
+                <span aria-hidden="true">&laquo;</span>
+            </button>
+            <button type="button" id="rotation-toggle" class="rotation-btn" aria-pressed="false"
+                aria-label="Automatische Rotation pausieren">
+                <span class="rotation-btn__icon" aria-hidden="true">⏸</span>
+            </button>
+            <button type="button" id="rotation-next" class="rotation-btn" aria-label="Nächster Monat">
+                <span aria-hidden="true">&raquo;</span>
+            </button>
+        </div>
 
         <div class="screen-container" id="screen-container">
             {% for month in months %}
@@ -73,9 +81,23 @@
                             —</span>
                             <span class="day-label">vergangen</span>
                             {% else %}
-                            <span class="day-indicator" aria-hidden="true">{% if day.status.value == "free" %}✓{% elif day.status.value == "limit_reached" %}✗{% else %}●{% endif %}</span>
+                            <span class="day-indicator" aria-hidden="true">
+                                {% if day.status.value == "free" %}
+                                ✓
+                                {% elif day.status.value == "limit_reached" %}
+                                ✗
+                                {% else %}
+                                ●
+                                {% endif %}
+                            </span>
                             <span class="day-slots">{{ day.vacation_count }}/{{ day.limit }}</span>
-                            <span class="day-label">{% if day.status.value == "limit_reached" %}belegt{% else %}{{ day.free_slots }} frei{% endif %}</span>
+                            <span class="day-label">
+                                {% if day.status.value == "limit_reached" %}
+                                belegt
+                                {% else %}
+                                {{ day.free_slots }} frei
+                                {% endif %}
+                            </span>
                             {% endif %}
                     </div>
                     {% endfor %}
@@ -109,7 +131,7 @@
 
     </main>
 
-    <script src="{% static 'screen/js/rotation.js' %}"></script>
+    <script src="{% static 'screen/js/rotation.js' %}?v=1.1"></script>
 </body>
 
 </html>
