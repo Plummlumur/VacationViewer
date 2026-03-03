@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from django.conf import settings
+from django.contrib.auth.hashers import check_password
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
@@ -63,7 +64,17 @@ def _check_credentials(username: str, password: str) -> bool:
     creds: dict[str, str] = _load_credentials()
     if not creds:
         return False
-    return creds.get("username") == username and creds.get("password") == password
+        
+    stored_username = creds.get("username")
+    stored_password = creds.get("password")
+    
+    if not stored_username or stored_username != username or not stored_password:
+        return False
+        
+    if stored_password.startswith("pbkdf2_"):
+        return check_password(password, stored_password)
+        
+    return stored_password == password
 
 
 def login_required(
