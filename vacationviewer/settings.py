@@ -2,19 +2,62 @@
 Django settings for VacationViewer project.
 
 TV-Info-Screen-Webapp for displaying vacation slot availability.
+
+Production usage: set SECRET_KEY, DEBUG, ALLOWED_HOSTS via environment
+variables or an EnvironmentFile (see deployment/vacationviewer_setup.sh).
 """
 
 import os
+import sys
 from pathlib import Path
 
 BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
-# Security: Load from env in production
-SECRET_KEY: str = os.environ.get(
-    "SECRET_KEY", "django-insecure-vacationviewer-dev-key-change-in-production"
-)
-DEBUG: bool = os.environ.get("DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS: list[str] = os.environ.get("ALLOWED_HOSTS", "*").split(",")
+# ---------------------------------------------------------------------------
+# Security-Critical Settings (S-01, S-03, S-04)
+# Fail fast in production: no silent fallbacks for critical values.
+# ---------------------------------------------------------------------------
+
+_secret_key: str = os.environ.get("SECRET_KEY", "")
+if not _secret_key:
+    # Allow insecure dev key only when DEBUG is explicitly True
+    _debug_env: str = os.environ.get("DEBUG", "")
+    if _debug_env.lower() != "true":
+        sys.exit(
+            "FATAL: SECRET_KEY environment variable is not set. "
+            "Generate one with: python -c \"from django.core.management.utils "
+            "import get_random_secret_key; print(get_random_secret_key())\""
+        )
+    _secret_key = "django-insecure-vacationviewer-dev-key-DO-NOT-USE-IN-PRODUCTION"
+
+SECRET_KEY: str = _secret_key
+
+# DEBUG must be explicitly set — no implicit default.
+# In dev: set DEBUG=True. In production: set DEBUG=False.
+_debug_raw: str = os.environ.get("DEBUG", "")
+if not _debug_raw:
+    # Convenience: if no env set at all, assume dev mode but warn loudly.
+    import warnings
+    warnings.warn(
+        "DEBUG environment variable is not set. Defaulting to True (dev mode). "
+        "Set DEBUG=False for production.",
+        stacklevel=1,
+    )
+    _debug_raw = "True"
+
+DEBUG: bool = _debug_raw.lower() == "true"
+
+# ALLOWED_HOSTS: never use '*' in production (S-04).
+# Default to localhost-only for safety.
+ALLOWED_HOSTS: list[str] = [
+    h.strip()
+    for h in os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+    if h.strip()
+]
+
+# ---------------------------------------------------------------------------
+# Application Definition
+# ---------------------------------------------------------------------------
 
 INSTALLED_APPS: list[str] = [
     "django.contrib.contenttypes",
@@ -66,7 +109,33 @@ STATIC_ROOT: Path = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD: str = "django.db.models.BigAutoField"
 
-# --- VacationViewer Configuration (Defaults) ---
+# ---------------------------------------------------------------------------
+# Session Security (S-11)
+# Admin sessions expire after 1 hour of inactivity.
+# ---------------------------------------------------------------------------
+
+SESSION_COOKIE_AGE: int = 3600          # 1 hour in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE: bool = True
+SESSION_COOKIE_HTTPONLY: bool = True
+SESSION_COOKIE_SAMESITE: str = "Strict"
+# SESSION_COOKIE_SECURE = True  # Enable when HTTPS is active
+
+# ---------------------------------------------------------------------------
+# Security Headers (S-12)
+# ---------------------------------------------------------------------------
+
+SECURE_CONTENT_TYPE_NOSNIFF: bool = True
+X_FRAME_OPTIONS: str = "DENY"
+
+# HTTPS-only settings — enable when TLS termination is configured:
+# SECURE_SSL_REDIRECT = True
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+
+# ---------------------------------------------------------------------------
+# VacationViewer Application Configuration (Defaults)
+# ---------------------------------------------------------------------------
 
 # Path to the XLSX vacation data file
 XLSX_PATH: Path = BASE_DIR / "data" / "urlaub.xlsx"
