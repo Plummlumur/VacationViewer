@@ -14,7 +14,7 @@ db.sqlite3
 staticfiles/
 
 # Config (sensitive)
-# config/admin.json
+config/admin.json
 config/settings_override.json
 
 # IDE
