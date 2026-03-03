@@ -202,7 +202,10 @@ def admin_login(request: HttpRequest) -> HttpResponse:
 
 
 def admin_logout(request: HttpRequest) -> HttpResponse:
-    """Admin logout view. Clears session and redirects to login.
+    """Admin logout view. Accepts POST only (CSRF protection).
+
+    GET requests are redirected to the login page without logging out.
+    This prevents cross-site request forgery from silently ending sessions.
 
     Args:
         request: The HTTP request.
@@ -210,8 +213,12 @@ def admin_logout(request: HttpRequest) -> HttpResponse:
     Returns:
         Redirect to login page.
     """
-    request.session.flush()
+    if request.method == "POST":
+        client_ip: str = _get_client_ip(request)
+        logger.info("Admin logout from %s", client_ip)
+        request.session.flush()
     return HttpResponseRedirect("/admin/login/")
+
 
 
 @login_required
