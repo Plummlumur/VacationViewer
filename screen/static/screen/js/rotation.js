@@ -34,6 +34,7 @@
     var toggleBtn = document.getElementById("rotation-toggle");
     var prevBtn = document.getElementById("rotation-prev");
     var nextBtn = document.getElementById("rotation-next");
+    var selectEl = document.getElementById("rotation-month-select");
     var currentIndex = 0;
     var paused = false;
     var rotationTimer = null;
@@ -53,6 +54,11 @@
             var label = pages[index].getAttribute("data-month-label") || "";
             var pageNum = index + 1;
             announceEl.textContent = label + " (" + pageNum + " von " + pages.length + ")";
+        }
+
+        // Keep dropdown select in sync
+        if (selectEl) {
+            selectEl.value = index.toString();
         }
     }
 
@@ -111,6 +117,17 @@
         toggleBtn.addEventListener("keydown", function (e) {
             if (e.key === " ") {
                 e.preventDefault();
+            }
+        });
+    }
+
+    if (selectEl) {
+        selectEl.addEventListener("change", function (e) {
+            var newIndex = parseInt(e.target.value, 10);
+            if (!isNaN(newIndex) && newIndex >= 0 && newIndex < pages.length) {
+                currentIndex = newIndex;
+                showPage(currentIndex);
+                resetRotationTimer();
             }
         });
     }

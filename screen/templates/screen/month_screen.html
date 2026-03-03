@@ -31,6 +31,11 @@
             <button type="button" id="rotation-prev" class="rotation-btn" aria-label="Vorheriger Monat">
                 <span aria-hidden="true">&laquo;</span>
             </button>
+            <select id="rotation-month-select" class="rotation-select" aria-label="Direkt zu Monat springen">
+                {% for month in months %}
+                <option value="{{ forloop.counter0 }}">{{ month.label }}</option>
+                {% endfor %}
+            </select>
             <button type="button" id="rotation-toggle" class="rotation-btn" aria-pressed="false"
                 aria-label="Automatische Rotation pausieren">
                 <span class="rotation-btn__icon" aria-hidden="true">⏸</span>

@@ -134,6 +134,30 @@ body {
     color: var(--free-text);
 }
 
+.rotation-select {
+    height: 48px;
+    border-radius: 24px;
+    padding: 0 20px;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s, border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-align: center;
+}
+
+.rotation-select:hover,
+.rotation-select:focus {
+    border-color: var(--text-secondary);
+    background: var(--bg-primary);
+}
+
 /* ===== Screen Container ===== */
 .screen-container {
     width: 100%;
