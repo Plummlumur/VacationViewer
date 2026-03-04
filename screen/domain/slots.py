@@ -32,6 +32,7 @@ def get_visible_days(
     day_counts: dict[date, int],
     limits: dict[int, int],
     today: date,
+    day_exceptions: dict[str, int] | None = None,
 ) -> list[DayData]:
     """Compute DayData for all visible days (today onwards).
 
@@ -42,6 +43,7 @@ def get_visible_days(
         day_counts: Mapping of date to number of vacationers.
         limits: Mapping of weekday (0=Mon) to max allowed vacationers.
         today: Current date (days before this are excluded).
+        day_exceptions: Mapping of ISO date string to specific limit override.
 
     Returns:
         List of DayData sorted by date.
@@ -71,6 +73,11 @@ def get_visible_days(
     while current <= end_date:
         weekday: int = current.weekday()
         limit: int = limits.get(weekday, 5)
+        
+        # Apply day-specific exception if it exists
+        if day_exceptions and current.isoformat() in day_exceptions:
+            limit = day_exceptions[current.isoformat()]
+            
         vacation_count: int = day_counts.get(current, 0)
         status: DayStatus = compute_day_status(vacation_count, limit)
         free_slots: int = max(0, limit - vacation_count)

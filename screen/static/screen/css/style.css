@@ -99,12 +99,17 @@ body {
     top: 0;
 }
 
-/* ===== Rotation Toggle (WCAG 2.2.2) ===== */
-.rotation-toggle {
+/* ===== Rotation Controls (WCAG 2.2.2) ===== */
+.rotation-controls {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 100;
+    display: flex;
+    gap: 12px;
+}
+
+.rotation-btn {
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -119,14 +124,38 @@ body {
     transition: background 0.2s, border-color 0.2s;
 }
 
-.rotation-toggle:hover {
+.rotation-btn:hover {
     border-color: var(--text-secondary);
     background: var(--bg-primary);
 }
 
-.rotation-toggle[aria-pressed="true"] {
+.rotation-btn[aria-pressed="true"] {
     border-color: var(--free-border);
     color: var(--free-text);
+}
+
+.rotation-select {
+    height: 48px;
+    border-radius: 24px;
+    padding: 0 20px;
+    border: 2px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s, border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    text-align: center;
+}
+
+.rotation-select:hover,
+.rotation-select:focus {
+    border-color: var(--text-secondary);
+    background: var(--bg-primary);
 }
 
 /* ===== Screen Container ===== */

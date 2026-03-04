@@ -32,6 +32,9 @@
     var pages = document.querySelectorAll(".month-page");
     var announceEl = document.getElementById("rotation-announce");
     var toggleBtn = document.getElementById("rotation-toggle");
+    var prevBtn = document.getElementById("rotation-prev");
+    var nextBtn = document.getElementById("rotation-next");
+    var selectEl = document.getElementById("rotation-month-select");
     var currentIndex = 0;
     var paused = false;
     var rotationTimer = null;
@@ -52,12 +55,30 @@
             var pageNum = index + 1;
             announceEl.textContent = label + " (" + pageNum + " von " + pages.length + ")";
         }
+
+        // Keep dropdown select in sync
+        if (selectEl) {
+            selectEl.value = index.toString();
+        }
     }
 
     function nextPage() {
         if (pages.length <= 1) return;
         currentIndex = (currentIndex + 1) % pages.length;
         showPage(currentIndex);
+    }
+
+    function prevPage() {
+        if (pages.length <= 1) return;
+        currentIndex = (currentIndex - 1 + pages.length) % pages.length;
+        showPage(currentIndex);
+    }
+
+    function resetRotationTimer() {
+        if (!paused && rotationTimer) {
+            stopRotation();
+            startRotation();
+        }
     }
 
     // --- Rotation Control ---
@@ -82,12 +103,12 @@
                 stopRotation();
                 toggleBtn.setAttribute("aria-pressed", "true");
                 toggleBtn.setAttribute("aria-label", "Automatische Rotation fortsetzen");
-                toggleBtn.querySelector(".rotation-toggle__icon").innerHTML = "&#x25B6;"; // ▶
+                toggleBtn.querySelector(".rotation-btn__icon").innerHTML = "&#x25B6;"; // ▶
             } else {
                 startRotation();
                 toggleBtn.setAttribute("aria-pressed", "false");
                 toggleBtn.setAttribute("aria-label", "Automatische Rotation pausieren");
-                toggleBtn.querySelector(".rotation-toggle__icon").innerHTML = "&#x23F8;"; // ⏸
+                toggleBtn.querySelector(".rotation-btn__icon").innerHTML = "&#x23F8;"; // ⏸
             }
         });
 
@@ -100,6 +121,31 @@
         });
     }
 
+    if (selectEl) {
+        selectEl.addEventListener("change", function (e) {
+            var newIndex = parseInt(e.target.value, 10);
+            if (!isNaN(newIndex) && newIndex >= 0 && newIndex < pages.length) {
+                currentIndex = newIndex;
+                showPage(currentIndex);
+                resetRotationTimer();
+            }
+        });
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener("click", function () {
+            prevPage();
+            resetRotationTimer();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener("click", function () {
+            nextPage();
+            resetRotationTimer();
+        });
+    }
+
     // --- Start Rotation ---
     if (pages.length > 1) {
         if (prefersReducedMotion) {
@@ -108,7 +154,7 @@
             if (toggleBtn) {
                 toggleBtn.setAttribute("aria-pressed", "true");
                 toggleBtn.setAttribute("aria-label", "Automatische Rotation fortsetzen");
-                toggleBtn.querySelector(".rotation-toggle__icon").innerHTML = "&#x25B6;";
+                toggleBtn.querySelector(".rotation-btn__icon").innerHTML = "&#x25B6;";
             }
         } else {
             startRotation();

@@ -1,0 +1,8 @@
+# VacationViewer – Development dependencies
+# Includes all production deps + testing and linting tools.
+
+-r requirements.txt
+
+pytest>=8.0
+pytest-django>=4.8
+ruff>=0.9

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="de">
 
@@ -6,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="VacationViewer – Admin-Login">
     <title>Admin – Login</title>
+    <!-- S-10: Self-hosted fonts – no external CDN requests -->
+    <link rel="stylesheet" href="{% static 'screen/css/fonts.css' %}">
     <style>
         * {
             margin: 0;
@@ -14,7 +17,7 @@
         }
 
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: #0f172a;
             color: #e2e8f0;
             display: flex;
@@ -67,7 +70,7 @@
             border-radius: 8px;
             color: #f8fafc;
             font-size: 16px;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             transition: border-color 0.2s;
         }
 
@@ -92,7 +95,7 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             transition: transform 0.1s, box-shadow 0.2s;
             margin-top: 8px;
         }

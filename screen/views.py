@@ -39,12 +39,23 @@ def month_screen(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "screen/month_screen.html",
-            {"error": str(e), "months": [], "config_json": "{}"},
+            {
+                # S-09: Do NOT expose internal paths or exception details to the browser.
+                # Full error is logged server-side via logger.error above.
+                "error": "Urlaubsdaten konnten nicht geladen werden.",
+                "months": [],
+                "config_json": "{}",
+            },
             status=500,
         )
 
     today: date = date.today()
-    days = get_visible_days(day_counts, config.vacation_limits, today)
+    days = get_visible_days(
+        day_counts,
+        config.vacation_limits,
+        today,
+        config.day_exceptions,
+    )
     months = group_by_month(days)
 
     # Prepare weekday headers
