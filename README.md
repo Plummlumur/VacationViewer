@@ -7,11 +7,13 @@ Datenquelle ist eine SQLite-Datenbank. Urlaubsdaten können manuell im Dashboard
 ## Features
 
 - **Monatsansicht** – Kalender-Grid (Mo–So) mit allen Tagen des Monats
-- **Status pro Tag** – Frei (✓ grün), Belegt (● gelb), Limit erreicht (✗ rot)
-- **Wochentag-Limits** – Unterschiedliche Max-Urlauber pro Wochentag
-- **Auto-Rotation** – Wechselt automatisch zwischen Monaten (konfigurierbar)
+- **Status pro Tag** – Zeigt genaue Anzahl freier Slots (z.B. "3 FREI"), "BELEGT" bei vollem Limit (inkl. farbblind-freundlichem Farbschema)
+- **Wochentag-Limits & Ausnahmen** – Globale Limits pro Wochentag sowie tagesspezifische Ausnahmen (z.B. Feiertage)
+- **Auto-Rotation & Navigation** – Automatischer Monatswechsel (konfigurierbar), pausierbar, plus manuelle Navigation (`<<` / `>>`)
 - **Auto-Refresh** – Lädt Daten regelmäßig neu (aus DB-Cache)
-- **Admin-Interface** – Login-geschütztes Dashboard zum Editieren aller Einstellungen
+- **Admin-Interface** – Login-geschütztes Dashboard zum Editieren aller Einstellungen und Tages-Ausnahmen
+- **Themes** – Unterstützung für verschiedene Themes, z.B. Apple Cupertino (Dark Mode / Light Mode)
+- **Security First** – Kein Standard-Passwort, PBKDF2-Hashes, CSP & sichere Session-Cookies
 - **Barrierefreiheit** – Symbole + Text + Farbe, hoher Kontrast (WCAG AA), große Schrift
 
 ## Tech-Stack
@@ -45,6 +47,9 @@ python manage.py migrate
 # Beispiel-XLSX als Arbeitsdatei kopieren
 cp data/urlaub_example.xlsx data/urlaub.xlsx
 
+# Admin-Passwort sicher hashen (Pflicht vor dem ersten Login!)
+python manage.py hash_admin_password
+
 # Server starten
 python manage.py runserver
 ```
@@ -74,13 +79,13 @@ Alle Werte sind über das **Admin-Dashboard** zur Laufzeit änderbar.
 
 ### Admin-Zugangsdaten
 
-Standard-Credentials stehen in `config/admin.json`:
+Aus Sicherheitsgründen gibt es **keine** Standard-Zugangsdaten mehr. Bevor Sie sich ins Admin-Interface einloggen können, müssen Sie ein sicheres Passwort festlegen:
 
-```json
-{"username": "admin", "password": "admin"}
+```bash
+python manage.py hash_admin_password
 ```
 
-> ⚠️ Für den Produktivbetrieb unbedingt ändern! Die Datei ist per `.gitignore` vom Repo ausgeschlossen.
+> ⚠️ Das Passwort wird als PBKDF2-SHA256-Hash in `config/admin.json` gespeichert. Die Datei ist per `.gitignore` vom Repo ausgeschlossen. Der Benutzername ist standardmäßig `admin`.
 
 ## XLSX-Schema
 
@@ -112,22 +117,9 @@ python manage.py check
 
 ## Deployment
 
-### Variante A: Server + Smart-TV-Browser
+Für einen detaillierten Produktions-Stack (Gunicorn, Systemd, verschlüsselte Environment-Variablen, lokales Kiosk-Setup auf Raspberry Pi) existiert ein ausführlicher Guide:
 
-1. Django auf internem Server starten (z.B. via `gunicorn`)
-2. Smart-TV-Browser öffnet `http://<server>:8000/` im Vollbild
-3. Auto-Rotation und Auto-Refresh laufen automatisch
-
-### Variante B: Raspberry Pi + Kiosk-Modus
-
-1. Raspberry Pi mit Chromium im Kiosk-Modus
-2. Django lokal auf dem Pi starten
-3. Chromium öffnet `http://127.0.0.1:8000/` im Vollbild
-
-```bash
-# Beispiel: Chromium Kiosk-Modus
-chromium-browser --kiosk --noerrdialogs http://127.0.0.1:8000/
-```
+👉 **[deployment/DEPLOYMENT.md](deployment/DEPLOYMENT.md)**
 
 ## Projektstruktur
 
