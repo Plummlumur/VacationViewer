@@ -31,7 +31,6 @@ def month_screen(request: HttpRequest) -> HttpResponse:
 
     try:
         day_counts: dict[date, int] = get_vacation_data(
-            path=Path(config.xlsx_path),
             ttl_minutes=config.refresh_minutes,
         )
     except Exception as e:

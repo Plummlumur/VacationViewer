@@ -25,7 +25,7 @@
 ## Tech-Stack und Begruendung (kurz)
 - Sprache/Runtime: Python 3.12
 - Framework: Django
-- Datenhaltung: Excel-Datei (XLSX) als read-only Quelle, intern aufbereitet im Speicher
+- Datenhaltung: SQLite-Datenbank für Mitarbeiter und Urlaubszeiträume. Excel-Datei (XLSX) als optionale Importquelle.
 - Frontend: Django Templates + leichtes CSS/JS fuer Auto-Rotation und Live-Refresh
 - Begruendung:
   - Django bietet schnellen, stabilen Setup fuer serverseitige Anzeige-Anwendungen
@@ -35,12 +35,13 @@
 
 ## Architektur-Skizze (Module und Verantwortlichkeiten)
 - `ingest`: XLSX laden, Schema validieren, Datums-/Kontingentwerte normalisieren
+- `services`: CRUD-Operationen fuer Mitarbeiter und Urlaubszeitraeume (Datenbank-Interaktion)
 - `domain`: Berechnung Tagesstatus (`frei`, `belegt`, `limit_erreicht`) und Monatsaggregation
 - `app/views`: Endpunkte fuer Screen-Ansicht und Health-Check
 - `ui`: TV-optimiertes Template, klare Statusindikatoren, Auto-Monatswechsel, Auto-Refresh
 - `config`: Konfigurationswerte (`urlaubslimit_n`, `rotation_seconds`, `refresh_minutes`)
 - Datenfluss:
-  - XLSX-Datei -> `ingest` validiert/normalisiert -> `domain` berechnet Slot-Status -> `ui` rendert aktuelle und kommende Monate
+   - XLSX-Datei/Manuelle Eingabe -> `ingest`/`services` -> SQLite-Datenbank -> `domain` berechnet Slot-Status -> `ui` rendert aktuelle und kommende Monate
 
 ## Coding-Konventionen (Format, Lint, Tests, Branching, Commits)
 - Format/Lint: `ruff format` + `ruff check` als verbindliche Gates
@@ -95,5 +96,5 @@
 - Performanceziel: initiale Anzeige < 1 Sekunde auf Zielhardware.
 
 ## Aenderungslog
-- 2026-03-02 Erstfassung erstellt.
 - 2026-03-02 Inhaltlich komplettiert (TV-Info-Screen, XLSX-Quelle, Barrierefreiheit, Test-/CI-Workflow).
+- 2026-03-04 Transition zu datenbankgestützter Verwaltung (v1.4.0).

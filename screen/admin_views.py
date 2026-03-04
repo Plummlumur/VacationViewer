@@ -20,6 +20,8 @@ from django.shortcuts import render
 
 from screen.cache import invalidate_cache
 from screen.config_manager import AppConfig, load_config, save_config
+from screen.models import Employee, Vacation
+from screen.services import import_vacations_from_excel
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -261,9 +263,9 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
             config.vacation_limits = new_limits
             config.day_exceptions = new_exceptions
 
-            # S-08: restrict xlsx_path to the data directory
-            raw_path: str = request.POST.get("xlsx_path", config.xlsx_path)
-            config.xlsx_path = _validate_xlsx_path(raw_path, config.xlsx_path)
+            config.rotation_seconds = max(
+                1, safe_int(request.POST.get("rotation_seconds"), 10)
+            )
 
             config.rotation_seconds = max(
                 1, safe_int(request.POST.get("rotation_seconds"), 10)
@@ -279,6 +281,73 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
         except Exception as e:
             logger.error("Invalid config input: %s", e)
 
+    # Handle Manual Vacation CRUD
+    if request.method == "POST":
+        action = request.POST.get("action")
+        
+        if action == "add_vacation":
+            try:
+                emp_name = request.POST.get("employee_name", "").strip()
+                start_str = request.POST.get("start_date")
+                end_str = request.POST.get("end_date")
+                
+                if emp_name and start_str and end_str:
+                    from datetime import datetime
+                    start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+                    end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+                    
+                    employee, _ = Employee.objects.get_or_create(name=emp_name)
+                    Vacation.objects.create(
+                        employee=employee,
+                        start_date=start_date,
+                        end_date=end_date
+                    )
+                    invalidate_cache()
+                    success = True
+                    logger.info("Admin manually added vacation for %s", emp_name)
+            except Exception as e:
+                logger.error("Failed to add vacation: %s", e)
+                
+        elif action == "delete_vacation":
+            try:
+                vacation_id = request.POST.get("vacation_id")
+                if vacation_id:
+                    Vacation.objects.filter(id=vacation_id).delete()
+                    invalidate_cache()
+                    success = True
+                    logger.info("Admin deleted vacation ID %s", vacation_id)
+            except Exception as e:
+                logger.error("Failed to delete vacation: %s", e)
+
+    # Handle Excel Import
+    import_result = None
+    if request.method == "POST" and request.FILES.get("vacation_file"):
+        try:
+            from django.core.files.storage import default_storage
+            from django.core.files.base import ContentFile
+            
+            uploaded_file = request.FILES["vacation_file"]
+            temp_path = Path(settings.BASE_DIR) / "tmp" / uploaded_file.name
+            temp_path.parent.mkdir(exist_ok=True)
+            
+            with open(temp_path, 'wb+') as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+            
+            created, skipped = import_vacations_from_excel(temp_path)
+            temp_path.unlink() # Cleanup
+            
+            import_result = {
+                "created": created,
+                "skipped": skipped,
+                "success": True
+            }
+            invalidate_cache()
+            logger.info("Admin imported %d vacations from %s", created, uploaded_file.name)
+        except Exception as e:
+            logger.error("Excel import failed: %s", e)
+            import_result = {"success": False, "error": str(e)}
+
     context: dict = {
         "config": config,
         "weekday_labels": WEEKDAY_LABELS,
@@ -292,41 +361,10 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
         ],
         "day_exceptions": config.day_exceptions.items(),
         "success": success,
+        "import_result": import_result,
+        "recent_vacations": Vacation.objects.select_related("employee").order_by("-id")[:10],
+        "employee_count": Employee.objects.count() if 'Employee' in locals() or 'Employee' in globals() else 0,
+        "vacation_count": Vacation.objects.count() if 'Vacation' in locals() or 'Vacation' in globals() else 0,
     }
 
     return render(request, "screen/admin_dashboard.html", context)
-
-
-# ---------------------------------------------------------------------------
-# Path Validation Helper (S-08)
-# ---------------------------------------------------------------------------
-
-
-def _validate_xlsx_path(raw_path: str, current_path: str) -> str:
-    """Restrict xlsx_path to the configured data directory.
-
-    Prevents path traversal by ensuring the resolved path stays within
-    BASE_DIR/data/. Falls back to current_path on violation.
-
-    Args:
-        raw_path: User-supplied path string from the form.
-        current_path: Current valid path to fall back to on error.
-
-    Returns:
-        Sanitized, absolute path string.
-    """
-    allowed_dir: Path = Path(settings.BASE_DIR) / "data"
-    try:
-        # Only use the filename component to prevent directory traversal
-        filename: str = Path(raw_path).name
-        if not filename:
-            raise ValueError("Empty filename")
-        resolved: Path = (allowed_dir / filename).resolve()
-        # Double-check the resolved path is still inside allowed_dir
-        resolved.relative_to(allowed_dir.resolve())
-        return str(resolved)
-    except (ValueError, RuntimeError) as e:
-        logger.warning(
-            "Path traversal attempt blocked: %r → %s. Keeping current path.", raw_path, e
-        )
-        return current_path

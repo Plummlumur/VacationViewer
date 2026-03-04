@@ -20,14 +20,12 @@ class AppConfig:
 
     Attributes:
         vacation_limits: Max vacationers per weekday (0=Mon, 6=Sun).
-        xlsx_path: Path to the XLSX data file.
         rotation_seconds: Auto-rotation interval in seconds.
         refresh_minutes: Data refresh interval in minutes.
     """
 
     vacation_limits: dict[int, int] = field(default_factory=dict)
     day_exceptions: dict[str, int] = field(default_factory=dict)
-    xlsx_path: str = ""
     rotation_seconds: int = 10
     refresh_minutes: int = 5
 
@@ -43,7 +41,6 @@ def load_config() -> AppConfig:
     # Start with Django settings defaults
     config = AppConfig(
         vacation_limits=dict(getattr(settings, "VACATION_LIMITS", {})),
-        xlsx_path=str(getattr(settings, "XLSX_PATH", "")),
         rotation_seconds=int(getattr(settings, "ROTATION_SECONDS", 10)),
         refresh_minutes=int(getattr(settings, "REFRESH_MINUTES", 5)),
     )
@@ -64,8 +61,7 @@ def load_config() -> AppConfig:
                 config.day_exceptions = {
                     str(k): int(v) for k, v in overrides["day_exceptions"].items()
                 }
-            if "xlsx_path" in overrides:
-                config.xlsx_path = str(overrides["xlsx_path"])
+
             if "rotation_seconds" in overrides:
                 config.rotation_seconds = int(overrides["rotation_seconds"])
             if "refresh_minutes" in overrides:

@@ -221,6 +221,90 @@
             max-width: 80px;
         }
 
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-box {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .info-box .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3b82f6;
+            display: block;
+        }
+
+        .info-box .label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            color: #6ee7b7;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
         /* Reduced motion preference */
         @media (prefers-reduced-motion: reduce) {
 
@@ -250,80 +334,201 @@
             </header>
 
             {% if success %}
-            <div class="success-message" role="status" id="save-success" tabindex="-1">
-                <span aria-hidden="true">&#x2705;</span> Konfiguration erfolgreich gespeichert. Änderungen sind sofort
-                wirksam.
+            <div class="alert alert-success" role="status" id="save-success" tabindex="-1">
+                <span aria-hidden="true">&#x2705;</span> Konfiguration erfolgreich gespeichert.
             </div>
             {% endif %}
 
-            <form method="post" action="/admin/dashboard/" aria-label="Konfigurationsformular">
-                {% csrf_token %}
+            {% if import_result %}
+            <div class="alert {% if import_result.success %}alert-success{% else %}alert-error{% endif %}"
+                role="status">
+                {% if import_result.success %}
+                <span aria-hidden="true">&#x1F4E5;</span> Import abgeschlossen: {{ import_result.created }} neu, {{
+                import_result.skipped }} Duplikate übersprungen.
+                {% else %}
+                <span aria-hidden="true">&#x26A0;</span> Import fehlgeschlagen: {{ import_result.error }}
+                {% endif %}
+            </div>
+            {% endif %}
 
-                <fieldset class="card">
-                    <legend>
-                        <h2>Urlaubslimits pro Wochentag</h2>
-                    </legend>
-                    {% for item in weekday_limits %}
-                    <div class="form-row">
-                        <label for="limit_{{ item.index }}">{{ item.label }}</label>
-                        <input type="number" id="limit_{{ item.index }}" name="limit_{{ item.index }}"
-                            value="{{ item.limit }}" min="0" max="40" aria-describedby="unit_limit_{{ item.index }}">
-                        <span class="unit" id="unit_limit_{{ item.index }}">max. Pers.</span>
-                    </div>
-                    {% endfor %}
-                </fieldset>
+            <div class="tabs">
+                <button type="button" class="tab-btn active" onclick="showTab('settings')">Einstellungen</button>
+                <button type="button" class="tab-btn" onclick="showTab('data')">Urlaubsdaten</button>
+            </div>
 
-                <fieldset class="card" id="exceptions-card">
-                    <legend>
-                        <h2>Tagesausnahmen</h2>
-                    </legend>
-                    <div id="exceptions-container">
-                        {% for date, limit in day_exceptions %}
-                        <div class="form-row exception-row">
-                            <input type="date" name="exception_dates[]" value="{{ date }}" required
-                                aria-label="Ausnahmedatum">
-                            <input type="number" name="exception_limits[]" value="{{ limit }}" min="0" max="40" required
-                                aria-label="Urlaubslimit für dieses Datum">
-                            <span class="unit">max. Pers.</span>
-                            <button type="button" class="btn-remove-exception" aria-label="Ausnahme entfernen"
-                                onclick="this.parentElement.remove()">&#x274C;</button>
+            <div id="settings-tab" class="tab-content active">
+                <form method="post" action="/admin/dashboard/" aria-label="Konfigurationsformular">
+                    {% csrf_token %}
+
+                    <fieldset class="card">
+                        <legend>
+                            <h2>Urlaubslimits pro Wochentag</h2>
+                        </legend>
+                        {% for item in weekday_limits %}
+                        <div class="form-row">
+                            <label for="limit_{{ item.index }}">{{ item.label }}</label>
+                            <input type="number" id="limit_{{ item.index }}" name="limit_{{ item.index }}"
+                                value="{{ item.limit }}" min="0" max="40"
+                                aria-describedby="unit_limit_{{ item.index }}">
+                            <span class="unit" id="unit_limit_{{ item.index }}">max. Pers.</span>
                         </div>
                         {% endfor %}
+                    </fieldset>
+
+                    <fieldset class="card" id="exceptions-card">
+                        <legend>
+                            <h2>Tagesausnahmen</h2>
+                        </legend>
+                        <div id="exceptions-container">
+                            {% for date, limit in day_exceptions %}
+                            <div class="form-row exception-row">
+                                <input type="date" name="exception_dates[]" value="{{ date }}" required
+                                    aria-label="Ausnahmedatum">
+                                <input type="number" name="exception_limits[]" value="{{ limit }}" min="0" max="40"
+                                    required aria-label="Urlaubslimit für dieses Datum">
+                                <span class="unit">max. Pers.</span>
+                                <button type="button" class="btn-remove-exception" aria-label="Ausnahme entfernen"
+                                    onclick="this.parentElement.remove()">&#x274C;</button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" class="btn-add-exception" onclick="addExceptionRow()">+ Ausnahme
+                            hinzufügen</button>
+                    </fieldset>
+
+                    <fieldset class="card">
+                        <legend>
+                            <h2>Allgemeine Einstellungen</h2>
+                        </legend>
+
+                        <div class="form-row">
+                            <label for="rotation_seconds">Rotation</label>
+                            <input type="number" id="rotation_seconds" name="rotation_seconds"
+                                value="{{ config.rotation_seconds }}" min="1" max="300"
+                                aria-describedby="unit_rotation">
+                            <span class="unit" id="unit_rotation">Sekunden</span>
+                        </div>
+                        <div class="form-row">
+                            <label for="refresh_minutes">Refresh</label>
+                            <input type="number" id="refresh_minutes" name="refresh_minutes"
+                                value="{{ config.refresh_minutes }}" min="1" max="60" aria-describedby="unit_refresh">
+                            <span class="unit" id="unit_refresh">Minuten</span>
+                        </div>
+                    </fieldset>
+
+                    <button type="submit" class="btn-save">
+                        <span aria-hidden="true">&#x1F4BE;</span> Einstellungen speichern
+                    </button>
+                </form>
+            </div>
+
+            <div id="data-tab" class="tab-content">
+                <div class="info-grid">
+                    <div class="info-box">
+                        <span class="value">{{ employee_count }}</span>
+                        <span class="label">Mitarbeiter</span>
                     </div>
-                    <button type="button" class="btn-add-exception" onclick="addExceptionRow()">+ Ausnahme
-                        hinzufügen</button>
+                    <div class="info-box">
+                        <span class="value">{{ vacation_count }}</span>
+                        <span class="label">Urlaubseinträge</span>
+                    </div>
+                </div>
+
+                <fieldset class="card">
+                    <legend>
+                        <h2>Excel-Import</h2>
+                    </legend>
+                    <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px;">
+                        Lade eine .xlsx-Datei hoch, um Urlaubsdaten zu importieren. Bestehende Einträge (gleicher
+                        Mitarbeiter + Zeitraum) werden automatisch übersprungen.
+                    </p>
+                    <form method="post" action="/admin/dashboard/" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <label for="vacation_file">XLSX Datei</label>
+                            <input type="file" id="vacation_file" name="vacation_file" accept=".xlsx" required>
+                        </div>
+                        <button type="submit" class="btn-save"
+                            style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                            <span aria-hidden="true">&#x1F4E4;</span> Datei importieren
+                        </button>
+                    </form>
                 </fieldset>
 
                 <fieldset class="card">
                     <legend>
-                        <h2>Allgemeine Einstellungen</h2>
+                        <h2>Manueller Eintrag</h2>
                     </legend>
-                    <div class="form-row">
-                        <label for="xlsx_path">Excel-Datei</label>
-                        <input type="text" id="xlsx_path" name="xlsx_path" value="{{ config.xlsx_path }}">
-                    </div>
-                    <div class="form-row">
-                        <label for="rotation_seconds">Rotation</label>
-                        <input type="number" id="rotation_seconds" name="rotation_seconds"
-                            value="{{ config.rotation_seconds }}" min="1" max="300" aria-describedby="unit_rotation">
-                        <span class="unit" id="unit_rotation">Sekunden</span>
-                    </div>
-                    <div class="form-row">
-                        <label for="refresh_minutes">Refresh</label>
-                        <input type="number" id="refresh_minutes" name="refresh_minutes"
-                            value="{{ config.refresh_minutes }}" min="1" max="60" aria-describedby="unit_refresh">
-                        <span class="unit" id="unit_refresh">Minuten</span>
-                    </div>
+                    <form method="post" action="/admin/dashboard/">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_vacation">
+                        <div class="form-row">
+                            <label for="employee_name">Name</label>
+                            <input type="text" id="employee_name" name="employee_name" placeholder="z.B. Max Mustermann"
+                                required list="employee-list">
+                            <datalist id="employee-list">
+                                <!-- Could populate with existing employees if desired -->
+                            </datalist>
+                        </div>
+                        <div class="form-row">
+                            <label for="start_date">Von</label>
+                            <input type="date" id="start_date" name="start_date" required style="color-scheme: dark;">
+                        </div>
+                        <div class="form-row">
+                            <label for="end_date">Bis</label>
+                            <input type="date" id="end_date" name="end_date" required style="color-scheme: dark;">
+                        </div>
+                        <button type="submit" class="btn-save"
+                            style="background: linear-gradient(135deg, #10b981, #059669);">
+                            <span aria-hidden="true">&#x2795;</span> Eintrag speichern
+                        </button>
+                    </form>
                 </fieldset>
 
-                <button type="submit" class="btn-save">
-                    <span aria-hidden="true">&#x1F4BE;</span> Speichern
-                </button>
-            </form>
+                <fieldset class="card">
+                    <legend>
+                        <h2>Kürzliche Einträge</h2>
+                    </legend>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #cbd5e1;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid #334155; text-align: left;">
+                                    <th style="padding: 12px 8px;">Mitarbeiter</th>
+                                    <th style="padding: 12px 8px;">Von</th>
+                                    <th style="padding: 12px 8px;">Bis</th>
+                                    <th style="padding: 12px 8px;">Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vacation in recent_vacations %}
+                                <tr style="border-bottom: 1px solid #1e293b;">
+                                    <td style="padding: 12px 8px;">{{ vacation.employee.name }}</td>
+                                    <td style="padding: 12px 8px;">{{ vacation.start_date|date:"d.m.Y" }}</td>
+                                    <td style="padding: 12px 8px;">{{ vacation.end_date|date:"d.m.Y" }}</td>
+                                    <td style="padding: 12px 8px;">
+                                        <form method="post" action="/admin/dashboard/" style="display:inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete_vacation">
+                                            <input type="hidden" name="vacation_id" value="{{ vacation.id }}">
+                                            <button type="submit" class="btn-remove-exception" title="Löschen"
+                                                onclick="return confirm('Eintrag wirklich löschen?')">&#x274C;</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" style="padding: 24px; text-align: center; color: #64748b;">Keine
+                                        Einträge vorhanden.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </fieldset>
+            </div>
 
             <nav aria-label="Seitennavigation">
                 <a href="/" class="btn-screen">&larr; Zur Urlaubsübersicht</a>
-            </nav>
         </div>
     </main>
 
@@ -349,6 +554,14 @@
                 <button type="button" class="btn-remove-exception" aria-label="Ausnahme entfernen" onclick="this.parentElement.remove()">&#x274C;</button>
             `;
             container.appendChild(row);
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(tabId + '-tab').classList.add('active');
+            event.currentTarget.classList.add('active');
         }
     </script>
 </body>

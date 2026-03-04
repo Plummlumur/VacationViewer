@@ -2,7 +2,7 @@
 
 TV-Info-Screen-Webapp zur Anzeige freier Urlaubsslots für ein Museumsteam (~40 Personen).  
 Zeigt eine Monatsansicht als Kalender-Grid mit farbcodierten Status-Indikatoren.  
-Datenquelle ist eine Excel-Datei (XLSX) mit Urlaubszeiträumen pro Person.
+Datenquelle ist eine SQLite-Datenbank. Urlaubsdaten können manuell im Dashboard gepflegt oder via Excel (XLSX) importiert werden.
 
 ## Features
 
@@ -10,7 +10,7 @@ Datenquelle ist eine Excel-Datei (XLSX) mit Urlaubszeiträumen pro Person.
 - **Status pro Tag** – Frei (✓ grün), Belegt (● gelb), Limit erreicht (✗ rot)
 - **Wochentag-Limits** – Unterschiedliche Max-Urlauber pro Wochentag
 - **Auto-Rotation** – Wechselt automatisch zwischen Monaten (konfigurierbar)
-- **Auto-Refresh** – Lädt Daten periodisch neu aus der XLSX-Datei
+- **Auto-Refresh** – Lädt Daten regelmäßig neu (aus DB-Cache)
 - **Admin-Interface** – Login-geschütztes Dashboard zum Editieren aller Einstellungen
 - **Barrierefreiheit** – Symbole + Text + Farbe, hoher Kontrast (WCAG AA), große Schrift
 
@@ -38,8 +38,9 @@ source .venv/bin/activate
 # Dependencies installieren
 pip install -r requirements.txt
 
-# Datenbank initialisieren (SQLite für Sessions)
-python manage.py migrate --run-syncdb
+# Datenbank initialisieren (SQLite für Persistenz)
+python manage.py makemigrations screen
+python manage.py migrate
 
 # Beispiel-XLSX als Arbeitsdatei kopieren
 cp data/urlaub_example.xlsx data/urlaub.xlsx
@@ -149,7 +150,9 @@ VacationViewer/
 │   ├── views.py                 # TV-Screen View
 │   ├── admin_views.py           # Admin Login + Dashboard
 │   ├── config_manager.py        # Config Load/Save
-│   ├── cache.py                 # In-Memory TTL-Cache
+│   ├── cache.py                 # In-Memory TTL-Cache (DB-basiert)
+│   ├── services.py              # Excel-Import & Business-Logik
+│   ├── models.py                # Employee & Vacation Modelle
 │   ├── urls.py
 │   ├── ingest/                  # XLSX-Parser
 │   │   ├── parser.py
