@@ -25,10 +25,20 @@ APP_USER=${APP_USER:-www-data}
 read -p "Enter the domain or IP address for the server (e.g., vacation.local or 192.168.1.100) [localhost]: " APP_HOST
 APP_HOST=${APP_HOST:-localhost}
 
-read -p "Do you want to configure HTTPS using Let's Encrypt / Certbot? (y/N) [N]: " USE_CERTBOT
-USE_CERTBOT=${USE_CERTBOT:-N}
+echo ""
+echo "HTTPS / SSL Configuration"
+echo "Select how you want to handle HTTPS for this deployment:"
+echo "  1) HTTP only (No encryption, or handled by an external reverse proxy)"
+echo "  2) Custom Certificate (e.g. wildcard cert, internal PKI)"
+echo "  3) Let's Encrypt (Requires public IP and open ports 80/443)"
+read -p "Enter choice [1-3] (Default: 1): " HTTPS_CHOICE
+HTTPS_CHOICE=${HTTPS_CHOICE:-1}
 
-if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+if [ "$HTTPS_CHOICE" = "2" ]; then
+    read -p "Enter absolute path to SSL Certificate (.crt/.pem): " CUSTOM_CERT_PATH
+    read -p "Enter absolute path to SSL Private Key (.key): " CUSTOM_KEY_PATH
+elif [ "$HTTPS_CHOICE" = "3" ]; then
+    echo "WARNING: Let's Encrypt requires this server to be reachable from the internet on port 80."
     read -p "Enter an email address for Let's Encrypt (required for expiration notices): " CERTBOT_EMAIL
 fi
 
@@ -37,7 +47,7 @@ echo "[1/7] Updating system and installing dependencies (Python, Nginx, etc.)...
 apt-get update
 apt-get install -y python3 python3-venv python3-pip git nginx rsync
 
-if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+if [ "$HTTPS_CHOICE" = "3" ]; then
     echo "  Installing certbot and nginx plugin..."
     apt-get install -y certbot python3-certbot-nginx
 fi
@@ -120,7 +130,36 @@ systemctl restart vacationviewer.service
 
 echo "[6/7] Setting up Nginx to serve the app..."
 NGINX_CONF="/etc/nginx/sites-available/vacationviewer"
-cat > "$NGINX_CONF" <<EOF
+
+if [ "$HTTPS_CHOICE" = "2" ]; then
+    cat > "$NGINX_CONF" <<EOF
+server {
+    listen 80;
+    server_name $APP_HOST;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name $APP_HOST;
+
+    ssl_certificate $CUSTOM_CERT_PATH;
+    ssl_certificate_key $CUSTOM_KEY_PATH;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    
+    location /static/ {
+        root $APP_DIR;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:$APP_DIR/vacationviewer.sock;
+    }
+}
+EOF
+else
+    cat > "$NGINX_CONF" <<EOF
 server {
     listen 80;
     server_name $APP_HOST;
@@ -137,6 +176,7 @@ server {
     }
 }
 EOF
+fi
 
 ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
 # Remove default nginx config to avoid conflicts if present
@@ -144,7 +184,7 @@ rm -f /etc/nginx/sites-enabled/default
 
 systemctl restart nginx
 
-if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+if [ "$HTTPS_CHOICE" = "3" ]; then
     echo "[7/7] Configuring HTTPS with Let's Encrypt..."
     if [ -n "$CERTBOT_EMAIL" ]; then
         certbot --nginx -d "$APP_HOST" --non-interactive --agree-tos -m "$CERTBOT_EMAIL" --redirect
@@ -153,13 +193,16 @@ if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
         certbot --nginx -d "$APP_HOST" --non-interactive --agree-tos --register-unsafely-without-email --redirect
     fi
     echo "  HTTPS configured successfully!"
+elif [ "$HTTPS_CHOICE" = "2" ]; then
+    echo "[7/7] Using Custom HTTPS Certificate..."
+    echo "  HTTPS configured successfully using provided certificates!"
 else
     echo "[7/7] Skipping HTTPS configuration..."
 fi
 
 echo "======================================================"
 echo " Setup complete! VacationViewer is now deployed."
-if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+if [ "$HTTPS_CHOICE" != "1" ]; then
     echo " Domain / IP   : https://$APP_HOST"
 else
     echo " Domain / IP   : http://$APP_HOST"
