@@ -25,16 +25,28 @@ APP_USER=${APP_USER:-www-data}
 read -p "Enter the domain or IP address for the server (e.g., vacation.local or 192.168.1.100) [localhost]: " APP_HOST
 APP_HOST=${APP_HOST:-localhost}
 
+read -p "Do you want to configure HTTPS using Let's Encrypt / Certbot? (y/N) [N]: " USE_CERTBOT
+USE_CERTBOT=${USE_CERTBOT:-N}
+
+if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+    read -p "Enter an email address for Let's Encrypt (required for expiration notices): " CERTBOT_EMAIL
+fi
+
 echo ""
-echo "[1/6] Updating system and installing dependencies (Python, Nginx, etc.)..."
+echo "[1/7] Updating system and installing dependencies (Python, Nginx, etc.)..."
 apt-get update
 apt-get install -y python3 python3-venv python3-pip git nginx rsync
 
-echo "[2/6] Setting up application directory..."
+if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+    echo "  Installing certbot and nginx plugin..."
+    apt-get install -y certbot python3-certbot-nginx
+fi
+
+echo "[2/7] Setting up application directory..."
 mkdir -p "$APP_DIR"
 chown -R "$APP_USER":"$APP_USER" "$APP_DIR"
 
-echo "[3/6] Setting up Python virtual environment and copying files..."
+echo "[3/7] Setting up Python virtual environment and copying files..."
 sudo -u "$APP_USER" python3 -m venv "$VENV_DIR"
 sudo -u "$APP_USER" "$VENV_DIR/bin/pip" install --upgrade pip
 
@@ -51,7 +63,7 @@ else
     exit 1
 fi
 
-echo "[4/6] Configuration and Database Migrations..."
+echo "[4/7] Configuration and Database Migrations..."
 mkdir -p /etc/vacationviewer
 if [ ! -f "$ENV_FILE" ]; then
     GENERATED_KEY=$(sudo -u "$APP_USER" "$VENV_DIR/bin/python" -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
@@ -75,7 +87,7 @@ sudo -u "$APP_USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/pyt
 echo "  Collecting static files..."
 sudo -u "$APP_USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py collectstatic --no-input"
 
-echo "[5/6] Setting up Gunicorn systemd service..."
+echo "[5/7] Setting up Gunicorn systemd service..."
 mkdir -p "$LOG_DIR"
 chown -R "$APP_USER":"$APP_USER" "$LOG_DIR"
 
@@ -106,7 +118,7 @@ systemctl daemon-reload
 systemctl enable vacationviewer.service
 systemctl restart vacationviewer.service
 
-echo "[6/6] Setting up Nginx to serve the app..."
+echo "[6/7] Setting up Nginx to serve the app..."
 NGINX_CONF="/etc/nginx/sites-available/vacationviewer"
 cat > "$NGINX_CONF" <<EOF
 server {
@@ -132,9 +144,26 @@ rm -f /etc/nginx/sites-enabled/default
 
 systemctl restart nginx
 
+if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+    echo "[7/7] Configuring HTTPS with Let's Encrypt..."
+    if [ -n "$CERTBOT_EMAIL" ]; then
+        certbot --nginx -d "$APP_HOST" --non-interactive --agree-tos -m "$CERTBOT_EMAIL" --redirect
+    else
+        echo "  Notice: Registering without email address."
+        certbot --nginx -d "$APP_HOST" --non-interactive --agree-tos --register-unsafely-without-email --redirect
+    fi
+    echo "  HTTPS configured successfully!"
+else
+    echo "[7/7] Skipping HTTPS configuration..."
+fi
+
 echo "======================================================"
 echo " Setup complete! VacationViewer is now deployed."
-echo " Domain / IP   : http://$APP_HOST"
+if [[ "$USE_CERTBOT" =~ ^[Yy]$ ]]; then
+    echo " Domain / IP   : https://$APP_HOST"
+else
+    echo " Domain / IP   : http://$APP_HOST"
+fi
 echo " Directory     : $APP_DIR"
 echo " Log files     : $LOG_DIR"
 echo "======================================================"
