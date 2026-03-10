@@ -25,6 +25,9 @@ APP_USER=${APP_USER:-www-data}
 read -p "Enter the domain or IP address for the server (e.g., vacation.local or 192.168.1.100) [localhost]: " APP_HOST
 APP_HOST=${APP_HOST:-localhost}
 
+read -p "Enter absolute path for persistent storage (Database & Data) [$APP_DIR/storage]: " APP_STORAGE_DIR
+APP_STORAGE_DIR=${APP_STORAGE_DIR:-$APP_DIR/storage}
+
 echo ""
 echo "HTTPS / SSL Configuration"
 echo "Select how you want to handle HTTPS for this deployment:"
@@ -52,9 +55,13 @@ if [ "$HTTPS_CHOICE" = "3" ]; then
     apt-get install -y certbot python3-certbot-nginx
 fi
 
-echo "[2/7] Setting up application directory..."
+echo "[2/7] Setting up application and storage directories..."
 mkdir -p "$APP_DIR"
 chown -R "$APP_USER":"$APP_USER" "$APP_DIR"
+
+mkdir -p "$APP_STORAGE_DIR/data"
+mkdir -p "$APP_STORAGE_DIR/config"
+chown -R "$APP_USER":"$APP_USER" "$APP_STORAGE_DIR"
 
 echo "[3/7] Setting up Python virtual environment and copying files..."
 sudo -u "$APP_USER" python3 -m venv "$VENV_DIR"
@@ -82,6 +89,9 @@ if [ ! -f "$ENV_FILE" ]; then
 SECRET_KEY=$GENERATED_KEY
 DEBUG=False
 ALLOWED_HOSTS=127.0.0.1,localhost,$APP_HOST
+DB_PATH=$APP_STORAGE_DIR/db.sqlite3
+DATA_DIR=$APP_STORAGE_DIR/data
+CONFIG_DIR=$APP_STORAGE_DIR/config
 EOF
     chmod 600 "$ENV_FILE"
     chown "$APP_USER":"$APP_USER" "$ENV_FILE"

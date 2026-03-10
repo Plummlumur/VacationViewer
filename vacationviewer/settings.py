@@ -94,7 +94,7 @@ WSGI_APPLICATION: str = "vacationviewer.wsgi.application"
 DATABASES: dict = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": Path(os.environ.get("DB_PATH", BASE_DIR / "db.sqlite3")),
     }
 }
 
@@ -137,8 +137,10 @@ X_FRAME_OPTIONS: str = "DENY"
 # VacationViewer Application Configuration (Defaults)
 # ---------------------------------------------------------------------------
 
+_data_dir: Path = Path(os.environ.get("DATA_DIR", BASE_DIR / "data"))
+
 # Path to the XLSX vacation data file
-XLSX_PATH: Path = BASE_DIR / "data" / "urlaub.xlsx"
+XLSX_PATH: Path = _data_dir / "urlaub.xlsx"
 
 # Max concurrent vacationers per weekday (0=Monday, 6=Sunday)
 VACATION_LIMITS: dict[int, int] = {
@@ -157,8 +159,10 @@ ROTATION_SECONDS: int = 10
 # Data refresh interval (minutes)
 REFRESH_MINUTES: int = 5
 
+_config_dir: Path = Path(os.environ.get("CONFIG_DIR", BASE_DIR / "config"))
+
 # Path to admin credentials file
-ADMIN_CREDENTIALS_PATH: Path = BASE_DIR / "config" / "admin.json"
+ADMIN_CREDENTIALS_PATH: Path = _config_dir / "admin.json"
 
 # Path to runtime config overrides (written by admin UI)
-CONFIG_OVERRIDE_PATH: Path = BASE_DIR / "config" / "settings_override.json"
+CONFIG_OVERRIDE_PATH: Path = _config_dir / "settings_override.json"
