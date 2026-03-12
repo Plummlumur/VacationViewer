@@ -102,10 +102,10 @@ fi
 
 cd "$APP_DIR"
 echo "  Applying migrations..."
-sudo -u "$APP_USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py makemigrations"
-sudo -u "$APP_USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py migrate"
+sudo -u "$APP_USER" bash -c "cd $APP_DIR && set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py makemigrations"
+sudo -u "$APP_USER" bash -c "cd $APP_DIR && set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py migrate"
 echo "  Collecting static files..."
-sudo -u "$APP_USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py collectstatic --no-input"
+sudo -u "$APP_USER" bash -c "cd $APP_DIR && set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py collectstatic --no-input"
 
 echo "[5/7] Setting up Gunicorn systemd service..."
 mkdir -p "$LOG_DIR"
