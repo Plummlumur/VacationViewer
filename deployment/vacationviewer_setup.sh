@@ -39,12 +39,7 @@ else
     echo "Warning: requirements.txt not found. Continuing without package installation."
 fi
 
-echo "[4/7] Running Django migrations and collecting static files..."
-python3 manage.py makemigrations
-python3 manage.py migrate
-DJANGO_SETTINGS_MODULE=vacationviewer.settings python3 manage.py collectstatic --no-input || true
-
-echo "[5/7] Creating EnvironmentFile for secrets..."
+echo "[4/7] Creating EnvironmentFile for secrets..."
 # Create secrets directory with restricted permissions (S-13)
 sudo mkdir -p /etc/vacationviewer
 if [ ! -f "$ENV_FILE" ]; then
@@ -65,6 +60,11 @@ EOF
 else
     echo "  EnvironmentFile already exists at $ENV_FILE – skipping generation."
 fi
+
+echo "[5/7] Running Django migrations and collecting static files..."
+sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py makemigrations"
+sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py migrate"
+sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; DJANGO_SETTINGS_MODULE=vacationviewer.settings $VENV_DIR/bin/python manage.py collectstatic --no-input || true"
 
 echo "[6/7] Creating systemd service for Gunicorn (production WSGI server)..."
 # Create log directory (S-02: replaces dev server)
