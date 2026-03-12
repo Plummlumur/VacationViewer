@@ -48,13 +48,13 @@ if [ ! -f "$ENV_FILE" ]; then
         "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
     sudo bash -c "cat > $ENV_FILE" <<EOF
 # VacationViewer – Production Environment
-# KEEP THIS FILE SECRET: chmod 600, owner root
+# KEEP THIS FILE SECRET: chmod 600, owner $USER
 SECRET_KEY=$GENERATED_KEY
 DEBUG=False
 ALLOWED_HOSTS=127.0.0.1,localhost,$(hostname)
 EOF
     sudo chmod 600 "$ENV_FILE"
-    sudo chown root:root "$ENV_FILE"
+    sudo chown "$USER":"$USER" "$ENV_FILE"
     echo "  EnvironmentFile created at $ENV_FILE"
     echo "  !! Review $ENV_FILE and set ALLOWED_HOSTS to your Pi's hostname !!"
 else
