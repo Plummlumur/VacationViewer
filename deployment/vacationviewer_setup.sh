@@ -63,9 +63,9 @@ fi
 
 echo "[5/7] Running Django migrations and collecting static files..."
 cd "$APP_DIR"
-sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py makemigrations"
-sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py migrate"
-sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; DJANGO_SETTINGS_MODULE=vacationviewer.settings $VENV_DIR/bin/python manage.py collectstatic --no-input || true"
+sudo -u "$USER" bash -c "cd $APP_DIR && set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py makemigrations"
+sudo -u "$USER" bash -c "cd $APP_DIR && set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py migrate"
+sudo -u "$USER" bash -c "cd $APP_DIR && set -a; source $ENV_FILE; set +a; DJANGO_SETTINGS_MODULE=vacationviewer.settings $VENV_DIR/bin/python manage.py collectstatic --no-input || true"
 
 echo "[6/7] Creating systemd service for Gunicorn (production WSGI server)..."
 # Create log directory (S-02: replaces dev server)
