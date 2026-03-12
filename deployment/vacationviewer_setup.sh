@@ -62,6 +62,7 @@ else
 fi
 
 echo "[5/7] Running Django migrations and collecting static files..."
+cd "$APP_DIR"
 sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py makemigrations"
 sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; $VENV_DIR/bin/python manage.py migrate"
 sudo -u "$USER" bash -c "set -a; source $ENV_FILE; set +a; DJANGO_SETTINGS_MODULE=vacationviewer.settings $VENV_DIR/bin/python manage.py collectstatic --no-input || true"
