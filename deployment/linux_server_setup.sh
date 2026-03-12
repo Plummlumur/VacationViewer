@@ -86,7 +86,7 @@ if [ ! -f "$ENV_FILE" ]; then
     GENERATED_KEY=$(sudo -u "$APP_USER" "$VENV_DIR/bin/python" -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
     cat > "$ENV_FILE" <<EOF
 # VacationViewer Production Environment File
-SECRET_KEY=$GENERATED_KEY
+SECRET_KEY='$GENERATED_KEY'
 DEBUG=False
 ALLOWED_HOSTS=127.0.0.1,localhost,$APP_HOST
 DB_PATH=$APP_STORAGE_DIR/db.sqlite3

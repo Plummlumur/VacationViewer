@@ -49,7 +49,7 @@ if [ ! -f "$ENV_FILE" ]; then
     sudo bash -c "cat > $ENV_FILE" <<EOF
 # VacationViewer – Production Environment
 # KEEP THIS FILE SECRET: chmod 600, owner $USER
-SECRET_KEY=$GENERATED_KEY
+SECRET_KEY='$GENERATED_KEY'
 DEBUG=False
 ALLOWED_HOSTS=127.0.0.1,localhost,$(hostname)
 EOF
